@@ -94,9 +94,12 @@ descr::freq(data_pr$v63)
 descr::freq(data_pr$v64)              
 descr::freq(data_pr$v65)              
 
+# -9 -1 NA
+# -8 messi a 3 in scale likert a 5 
+
 data_pr <- data_pr %>%
   mutate(v1=mapvalues(v1, from=c(-9,-8,1,2,3,4,5),
-                       to=c(NA,3,5,4,3,2,1)))%>%
+                      to=c(NA,3,5,4,3,2,1)))%>%
   mutate(v56=mapvalues(v56, from=c(-9,-8,1,2,3,4),
                        to=c(NA,NA,4,3,2,1)))%>%
   mutate(v30=mapvalues(v30, from=c(-9,-8,1,2,3,4,5),
@@ -120,17 +123,13 @@ data_pr <- data_pr %>%
   mutate(v32=mapvalues(v32, from=c(-9,-8,0,1,2,3,4,5,6,7,8,9,10),
                        to=c(NA,NA,1,1,2,2,3,3,3,4,4,5,5))) %>% 
   mutate(v62=mapvalues(v62, from=c(-9,-8,-1,1,2,3,4,5),
-                       to=c(NA,3,0,5,4,3,2,1)))%>%
+                       to=c(NA,3,NA,5,4,3,2,1)))%>%
   mutate(v63=mapvalues(v63, from=c(-9,-8,-1,1,2,3,4,5),
-                       to=c(NA,3,0,5,4,3,2,1)))%>%
+                       to=c(NA,3,NA,5,4,3,2,1)))%>%
   mutate(v64=mapvalues(v64, from=c(-9,-8,-1,1,2,3,4,5),
-                       to=c(NA,3,0,5,4,3,2,1)))%>%
+                       to=c(NA,3,NA,5,4,3,2,1)))%>%
   mutate(v65=mapvalues(v65, from=c(-9,-8,-1,1,2,3,4,5),
-                       to=c(NA,3,0,5,4,3,2,1)))
-
-
-# -1 messi a 0 per non eliminare osservazioni
-# -8 messi a 3 in scale likert a 5 
+                       to=c(NA,3,NA,5,4,3,2,1)))
 
 
 data_pr <- na.omit(data_pr)
@@ -142,7 +141,6 @@ factanal(~data_pr$v30+data_pr$v31+data_pr$v33+data_pr$v1+data_pr$v50+data_pr$v56
            data_pr$v64+data_pr$v65+data_pr$v22+data_pr$v23+data_pr$v24, factors = 2)
 
 factanal(~data_pr$v62+data_pr$v63+data_pr$v64+data_pr$v65+data_pr$v22+data_pr$v23+data_pr$v24, factors = 2)
-
 
 
 

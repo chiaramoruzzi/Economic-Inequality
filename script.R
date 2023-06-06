@@ -134,18 +134,19 @@ data_pr <- data_pr %>%
 
 data_pr <- na.omit(data_pr)
 
-
-fa.parallel(data_pr, fa="fa")
+fa1 <- fa.parallel(data_pr, fa="fa")
 
 factanal(~data_pr$v30+data_pr$v31+data_pr$v33+data_pr$v1+data_pr$v50+data_pr$v56+data_pr$v62+data_pr$v63+
            data_pr$v64+data_pr$v65+data_pr$v22+data_pr$v23+data_pr$v24, factors = 2)
 
-factanal(~data_pr$v62+data_pr$v63+data_pr$v64+data_pr$v65+data_pr$v22+data_pr$v23+data_pr$v24, factors = 2)
+fa <- factanal(~data_pr$v62+data_pr$v63+data_pr$v64+data_pr$v65+data_pr$v22+data_pr$v23+data_pr$v24, factors = 2, rotation)
+fa.plot(fa)
+fa.diagram(fa)
 
 
+#install.packages("GPArotation")
+library(GPArotation)
 
-
-
-
+oblimin(fa)
 
 

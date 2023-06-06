@@ -120,13 +120,18 @@ data_pr <- data_pr %>%
   mutate(v32=mapvalues(v32, from=c(-9,-8,0,1,2,3,4,5,6,7,8,9,10),
                        to=c(NA,NA,1,1,2,2,3,3,3,4,4,5,5))) %>% 
   mutate(v62=mapvalues(v62, from=c(-9,-8,-1,1,2,3,4,5),
-                       to=c(NA,NA,0,5,4,3,2,1)))%>%
+                       to=c(NA,3,0,5,4,3,2,1)))%>%
   mutate(v63=mapvalues(v63, from=c(-9,-8,-1,1,2,3,4,5),
-                       to=c(NA,NA,0,5,4,3,2,1)))%>%
+                       to=c(NA,3,0,5,4,3,2,1)))%>%
   mutate(v64=mapvalues(v64, from=c(-9,-8,-1,1,2,3,4,5),
-                       to=c(NA,NA,0,5,4,3,2,1)))%>%
+                       to=c(NA,3,0,5,4,3,2,1)))%>%
   mutate(v65=mapvalues(v65, from=c(-9,-8,-1,1,2,3,4,5),
-                       to=c(NA,NA,0,5,4,3,2,1)))
+                       to=c(NA,3,0,5,4,3,2,1)))
+
+
+# -1 messi a 0 per non eliminare osservazioni
+# -8 messi a 3 in scale likert a 5 
+
 
 data_pr <- na.omit(data_pr)
 

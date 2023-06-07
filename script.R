@@ -1,4 +1,4 @@
-#import packages----
+##---------import packages----
 library(corrplot)
 library(tidyr)
 library(plyr)
@@ -7,15 +7,18 @@ library(psych)
 library(ggplot2)
 library(GPArotation)
 
-#import original dataset----
+
+##---------import original dataset----
 setwd("/Users/trava/OneDrive/Desktop/")
 data <-rio::import( "ZA7600_v3-0-0.dta")
 
-#creazione dataframe per analisi fattoriale----
+
+##---------creazione dataframe per analisi fattoriale----
 data_fa <- data.frame(data$v30, data$v31, data$v50, data$v32, data$v22, data$v23, data$v24, data$v28, data$v34)
 colnames(data_fa) <- c("v30", "v31", "v50", "v32", "v22", "v23", "v24", "v28", "v34")
 
-#vedere distribuzione di frequenze----
+
+##---------vedere distribuzione di frequenze----
 #fattore 1
 descr::freq(data_fa$v30)
 descr::freq(data_fa$v31)
@@ -29,7 +32,7 @@ descr::freq(data_fa$v28)
 descr::freq(data_fa$v34)
 
 
-#ricodifica delle variabili----
+##---------ricodifica delle variabili----
 data_fa <- data_fa %>%
   mutate(v30=mapvalues(v30, from=c(-9,-8,1,2,3,4,5),
                        to=c(NA,3,5,4,3,2,1)))%>%
@@ -51,68 +54,58 @@ data_fa <- data_fa %>%
                        to=c(NA,3,5,4,3,2,1)))
 
 
-#correlation matrix e grafico di correlazione----
+##---------correlation matrix e grafico di correlazione----
 cor(data_fa, use = "complete.obs")
 corrplot(cor(data_fa, use = "complete.obs"),method = "number")
 
 
-#analisi fattoriale----
-
+##---------analisi fattoriale----
 #1. controllare il numero di fattori sia con il metodo pca che paf
 fa.parallel(data_fa,fa = "both")#2: utilizzeremo il metodo pca, poiché gli eigenvalue prodotti sono ottimali nel nostro caso
-
-
 #2. metodo di estrazione PAC
-fa <- principal(data1, nfactors = 2, threshold = 0.3)
+fa <- principal(data_fa, nfactors = 2, rotate = "varimax", missing = TRUE)
 fa
+#bisogna capire come fare a impostare una soglia pd
 
 
-# Imposta la soglia desiderata
-soglia <- 0.4  # Sostituisci con la soglia desiderata
-
-# Visualizza solo i valori superiori alla soglia nella matrice dei risultati
-matrmatrice_risultati[matrice_risultati > soglia]
-#grafici
-#1
-variabili_fattori <- fa.diagram(fa)
-
-print(variabili_fattori)
-#2
+##---------grafici----
+#1 diagramma
+fa.diagram(fa)
+#2 piano cartesiano
 # Estrai carichi dei fattori
 loadings <- fa$loadings
-soglia <- 0.4
-# Elimina i carichi dei fattori inferiori alla soglia
-loadings[abs(loadings) < soglia] <- 0
-
-
-# Creazione del data frame per il grafico
+#Creazione del data frame per il grafico
 df <- data.frame(
   Factor1 = loadings[, 1],
   Factor2 = loadings[, 2],
-  Variable = rownames(loadings)
-)
+  Variable = rownames(loadings))
 # Creazione del grafico della factor analysis
 ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
   geom_point() +
   geom_text(hjust = 1.2) +
-  geom_vline(xintercept = 0) +
-  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0, lty=2) +
+  geom_hline(yintercept = 0, lty=2) +
   xlab("Factor 1") +
   ylab("Factor 2") +
-  ggtitle("Factor Analysis Plot")
+  ggtitle("Factor Analysis Plot") 
+#è utile per vedere la vicinanza dei punti delle variabili rispetto agli assi dei fattori
+#inoltre, se la plotti prima e dopo aver impostato rotate, si vede che i punti si spostano dal punto originale!
 
-#last step: variables creation
-variabili_fattori <- as.matrix(data1) %*% loadings
 
-# Visualizza le variabili dei fattori
+##---------creazione delle variabili----
+variabili_fattori <- as.matrix(data_fa) %*% loadings
+#Visualizza le variabili dei fattori
 head(variabili_fattori, 10)
+#aggiungere le nuove variabili al dataset
+data_fa <- cbind(data_fa, variabili_fattori)
 
-data1 <- cbind(data1, variabili_fattori)
 
-hist(dat1$RC1)
-hist(dat1$RC2)
+#FINE----
 
-plot(data1$v21, data1$RC1)
+
+
+
+
 
 #F1 from "unfairness beliefs" to "personal beliefs"
 

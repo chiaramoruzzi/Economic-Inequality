@@ -4,6 +4,7 @@ library(tidyr)
 library(plyr)
 library(dplyr)
 library(psych)
+library(ggplot2)
 rm(list = ls())
 
 #import
@@ -85,6 +86,31 @@ factanal(~data1$v30+data1$v31+data1$v50+data1$v32
 fa <- principal(data1, nfactors = 2, rotate = "promax")
 fa
 
+#grafici
+#1
+fa.diagram(fa)
+
+#2
+# Estrai le carichi dei fattori
+loadings <- fa$loadings
+
+# Creazione del data frame per il grafico
+df <- data.frame(
+  Factor1 = loadings[, 1],
+  Factor2 = loadings[, 2],
+  Variable = rownames(loadings)
+)
+# Creazione del grafico della factor analysis
+ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
+  geom_point() +
+  geom_text(hjust = 1.2) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  xlab("Factor 1") +
+  ylab("Factor 2") +
+  ggtitle("Factor Analysis Plot")
+
+
 #F1 from "unfairness beliefs" to "personal beliefs"
 
 
@@ -148,7 +174,7 @@ fa1 <- fa.parallel(data_pr, fa="fa")
 factanal(~data_pr$v30+data_pr$v31+data_pr$v33+data_pr$v1+data_pr$v50+data_pr$v56+data_pr$v62+data_pr$v63+
            data_pr$v64+data_pr$v65+data_pr$v22+data_pr$v23+data_pr$v24, factors = 2)
 
-fa <- factanal(~data_pr$v62+data_pr$v63+data_pr$v64+data_pr$v65+data_pr$v22+data_pr$v23+data_pr$v24, factors = 2, rotation)
+fa <- factanal(~data_pr$v62+data_pr$v63+data_pr$v64+data_pr$v65+data_pr$v22+data_pr$v23+data_pr$v24, factors = 2)
 fa.plot(fa)
 fa.diagram(fa)
 

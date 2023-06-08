@@ -6,7 +6,7 @@ library(dplyr)
 library(psych)
 library(ggplot2)
 library(GPArotation)
-
+library("ggrepel")
 
 ##---------import original dataset----
 setwd("/Users/trava/OneDrive/Desktop/")
@@ -65,14 +65,13 @@ corrplot(cor(data_fa, use = "complete.obs"),method = "number")
 #1. controllare il numero di fattori sia con il metodo pca che paf
 fa.parallel(data_fa,fa = "both")#2: utilizzeremo il metodo pca, poiché gli eigenvalue prodotti sono ottimali nel nostro caso
 #2. metodo di estrazione PAC
-fa <- principal(data_fa, nfactors = 2, rotate = "varimax", missing = TRUE)
-fa
-#bisogna capire come fare a impostare una soglia pd
+fa <- principal(r=data_fa, nfactors = 2, rotate = "promax", missing = TRUE)
+print.psych(fa, cut = 0.5)
 
 
 ##---------grafici----
 #1 diagramma
-fa.diagram(fa)
+fa.diagram(fa, cut = 0.5)
 #2 piano cartesiano
 # Estrai carichi dei fattori
 loadings <- fa$loadings
@@ -84,12 +83,13 @@ df <- data.frame(
 # Creazione del grafico della factor analysis
 ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
   geom_point() +
-  geom_text(hjust = 1.2) +
+  geom_label_repel(hjust = 0.5, position = "identity", box.padding = 0.16, label.size = 0.1) +
   geom_vline(xintercept = 0, lty=2) +
   geom_hline(yintercept = 0, lty=2) +
   xlab("Factor 1") +
   ylab("Factor 2") +
-  ggtitle("Factor Analysis Plot") 
+  ggtitle("Factor Analysis Plot with promax rotation") +
+  theme_minimal()
 #è utile per vedere la vicinanza dei punti delle variabili rispetto agli assi dei fattori
 #inoltre, se la plotti prima e dopo aver impostato rotate, si vede che i punti si spostano dal punto originale!
 
@@ -101,7 +101,13 @@ head(variabili_fattori, 10)
 #aggiungere le nuove variabili al dataset
 data_fa <- cbind(data_fa, variabili_fattori)
 
+rc2 <- (data_fa$v30 + data_fa$v31)
+rc1 <- (data_fa$v23 + data_fa$v22 + data_fa$v34 + data_fa$v24)
 
+data_fa1 <- data.frame(data_fa$v30, data_fa$v31, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
+
+fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "promax", missing = TRUE)
+print.psych(fa1, cut = 0.5)
 # import Gini index data
 
 library(readr)

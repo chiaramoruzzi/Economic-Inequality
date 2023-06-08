@@ -132,6 +132,14 @@ print(fa1)
 plot(density(data_fa1$RC1, na.rm = T))
 plot(density(data_fa1$RC2, na.rm = T))
 
+att_eco <- (data_fa1$RC1 + data_fa1$RC2)
+
+plot(density(att_eco))
+range(att_eco)
+
+att_eco <- mean(data_fa1$RC2 + data_fa1$RC1)
+
+
 # import Gini index data
 
 library(readr)

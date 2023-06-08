@@ -56,9 +56,13 @@ data_fa <- data_fa %>%
 #mutate(v21=mapvalues(v21, from=c(-9,-8,1,2,3,4,5),
 #to=c(NA,3,5,4,3,2,1)))%>%
 
+##---------NA remove-----
+data_fa<-na.omit(data_fa)
+
 ##---------correlation matrix e grafico di correlazione----
 cor(data_fa, use = "complete.obs")
 corrplot(cor(data_fa, use = "complete.obs"),method = "number")
+
 
 
 ##---------analisi fattoriale----
@@ -107,10 +111,10 @@ rc1 <- (data_fa$v23 + data_fa$v22 + data_fa$v34 + data_fa$v24)
 ##----------subset del dataframe eliminando variabili superflue----
 data_fa1 <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
 #factor analysis
-fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "varimax", missing = TRUE)
-print.psych(fa1, cut = 0.5)
+fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "varimax")
+print.psych(fa1, cut = 0.4)
 #diagramma
-fa.diagram(fa1, digits = 2, f.cut=0.1)
+fa.diagram(fa1, digits = 2)
 # Estrai carichi dei fattori
 loadings1 <- fa1$loadings
 variabili_fattori1 <- as.matrix(data_fa1) %*% loadings1
@@ -119,8 +123,14 @@ head(variabili_fattori1, 10)
 #aggiungere le nuove variabili al dataset
 data_fa1 <- cbind(data_fa1, variabili_fattori1)
 
-print(fa)
+print(fa1)
 
+## indice composito: attitude towards economic inequality
+# range 1-5= 1-> sfavore ridurre disuguaglianze
+#            5-> favore ridurre disuguaglianze
+
+plot(density(data_fa1$RC1, na.rm = T))
+plot(density(data_fa1$RC2, na.rm = T))
 
 # import Gini index data
 

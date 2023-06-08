@@ -7,7 +7,6 @@ library(psych)
 library(ggplot2)
 library(GPArotation)
 library(ggrepel)
-install.packages("Rgraphviz")
 
 ##---------import original dataset----
 setwd("/Users/trava/OneDrive/Desktop/")
@@ -61,9 +60,7 @@ data_fa<-na.omit(data_fa)
 
 ##---------correlation matrix e grafico di correlazione----
 cor(data_fa, use = "complete.obs")
-corrplot(cor(data_fa, use = "complete.obs"),method = "number")
-
-
+corrplot(cor(data_fa, use = "complete.obs"),method = "number", type = c("lower"))
 
 ##---------analisi fattoriale----
 #1. controllare il numero di fattori sia con il metodo pca che paf
@@ -75,7 +72,8 @@ print.psych(fa)
 
 ##---------grafici----
 #1 diagramma
-fa.diagram(fa, cut = 0.4)
+fa.diagram(fa, cut = 0.4, digits = 2)
+
 #2 piano cartesiano
 # Estrai carichi dei fattori
 loadings <- fa$loadings
@@ -105,16 +103,17 @@ head(variabili_fattori, 10)
 #aggiungere le nuove variabili al dataset
 data_fa <- cbind(data_fa, variabili_fattori)
 
-rc2 <- (data_fa$v30 + data_fa$v31)
-rc1 <- (data_fa$v23 + data_fa$v22 + data_fa$v34 + data_fa$v24)
 
 ##----------subset del dataframe eliminando variabili superflue----
 data_fa1 <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
+colnames(data_fa1) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
+
 #factor analysis
 fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "varimax")
 print.psych(fa1, cut = 0.4)
 #diagramma
 fa.diagram(fa1, digits = 2)
+
 # Estrai carichi dei fattori
 loadings1 <- fa1$loadings
 variabili_fattori1 <- as.matrix(data_fa1) %*% loadings1
@@ -125,34 +124,95 @@ data_fa1 <- cbind(data_fa1, variabili_fattori1)
 
 print(fa1)
 
+##---------metodo alternativo per la creazione delle variabili fattori-----
+
+# indici non pesati
+# rc2 <- (data_fa1$v30 + data_fa1$v31 + data_fa1$v32)
+# rc1 <- (data_fa1$v23 + data_fa1$v22 + data_fa1$v34 + data_fa1$v24)
+
+# indici pesati per factor loadings - controllo incrociato
+# F2 <- ((0.91*data_fa1$v30) + (0.91*data_fa1$v31) + (0.51*data_fa1$v32))
+# F1 <- ((0.74*data_fa1$v23) + (0.68*data_fa1$v22) + (0.64*data_fa1$v34) + (0.61*data_fa1$v24))
+
 ## indice composito: attitude towards economic inequality
 # range 1-5= 1-> sfavore ridurre disuguaglianze
 #            5-> favore ridurre disuguaglianze
 
+
+# indici creati con metodo standard
 plot(density(data_fa1$RC1, na.rm = T))
 plot(density(data_fa1$RC2, na.rm = T))
 
-att_eco <- (data_fa1$RC1 + data_fa1$RC2)
+# indici creati manualmente senza pesi
+plot(density(F1, na.rm = T))
+plot(density(F2, na.rm = T))
 
-plot(density(att_eco))
+# indici creati manualmente pesati
+plot(density(rc1, na.rm = T))
+plot(density(rc2, na.rm = T))
+
+#--------confronto tra indici-----
+
+ind <- data.frame(data_fa1$RC1,F1,rc1,data_fa1$RC2,F2,rc2)
+head(ind)
+
+##-------variabile finale---------
+
+att_eco <- (data_fa1$RC1 + data_fa1$RC2)/7
+
+p <- ggplot(data=NULL, aes(x=att_eco))+
+  geom_density()+
+  xlim(0,5)+
+  ylim(0,1)+
+  xlab("Attitude towards economic inequality")+
+  ylab("Density")+
+  ggtitle("Distribution of the dependent variable")+
+  theme_minimal()
+
+p + theme(plot.title = element_text(hjust = 0.5))
+
 range(att_eco)
 
-att_eco <- mean(data_fa1$RC2 + data_fa1$RC1)
+##-----RELIABILITY TEST-----------
+
+omega(m = data_fa1) # CON FATTORI
 
 
+rel_test <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
+colnames(rel_test) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
+
+om <- omega(m = rel_test, nfactors = 2) # SENZA FATTORI
+print.psych(om, cut=0.3)
+
+# metodo alternativo grz chatgpt
+
+alpha_fattori <- alpha(data_fa1[, fa1$loadings[,2] != 0])
+
+
+install.packages("ltm")
+library(ltm)
+cronbach.alpha(rel_test)
+
+
+##-----VALIDITY TEST--------------
+
+
+##-----RELATION TEST--------------
 # import Gini index data
 
 library(readr)
 gini <- read_csv("Gini index 2018 2019.csv")
 View(gini)
 
-
-
-
-
-
 #FINE----
 
+
+## INTERACTIVE MODEL 
+Y = a + b1x + b2z + b3(x*z) + u
+
+x è dicotomica: ineguaglianza percepita sì/no
+z è continua: indice di gini
+y è continua
 
 
 

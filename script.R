@@ -235,6 +235,8 @@ total <- data.frame(att_eco, data_fa1, country_e_v50)
 
 #FINE----
 
+##------------test---------------------
+
 t.test(total$att_eco[total$v21d==0], total$att_eco[total$v21d==1])
 
 boxplot(total$att_eco[total$v21==1], total$att_eco[total$v21==2], total$att_eco[total$v21==3],

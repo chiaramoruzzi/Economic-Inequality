@@ -9,6 +9,8 @@ library(GPArotation)
 library(ggrepel)
 library(ltm)
 library(readr)
+library(ggeffects)
+
 
 
 ##---------import original dataset----
@@ -152,9 +154,9 @@ ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
 # Creazione variabili fattori
 variabili_fattori1 <- as.matrix(data_fa1) %*% loadings
 #Visualizza le variabili dei fattori
-head(variabili_fattori, 10)
+head(variabili_fattori1, 10)
 #aggiungere le nuove variabili al dataset
-data_fa1 <- cbind(data_fa1, variabili_fattori)
+data_fa1 <- cbind(data_fa1, variabili_fattori1)
 
 
 ##---------metodo alternativo per la creazione delle variabili fattori-----
@@ -195,27 +197,26 @@ att_eco <- (data_fa1$RC1 + data_fa1$RC2)/7
 
 p <- ggplot(data=NULL, aes(x=att_eco))+
   geom_density()+
-  xlim(0,5)+
-  ylim(0,1)+
+  xlim(0,30)+
   xlab("Attitude towards economic inequality")+
   ylab("Density")+
   ggtitle("Distribution of the dependent variable")+
   theme_minimal()
 
 p + theme(plot.title = element_text(hjust = 0.5))
-
+hist(att_eco)
 range(att_eco)
 
 ##-----RELIABILITY TEST-----------
 
-omega(m = data_fa1) # CON FATTORI
+#omega(m = data_fa1) # CON FATTORI
 
 
 rel_test <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
 colnames(rel_test) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
 
-om <- omega(m = rel_test, nfactors = 2) # SENZA FATTORI
-print.psych(om, cut=0.3)
+#om <- omega(m = rel_test, nfactors = 2) # SENZA FATTORI
+#print.psych(om, cut=0.3)
 
 # metodo alternativo grazie chatgpt
 
@@ -232,6 +233,7 @@ cronbach.alpha(rel_test)
 gini <- read_csv("Gini index 2018 2019.csv")
 View(gini)
 ##-----subset gini index data---------------
+total <- data.frame(att_eco, data_fa1, country_e_v50)
 
 gini2018 <- subset(gini, TIME == 2018)
 
@@ -242,17 +244,48 @@ head(gini2018,11)
 
 hist(gini2018$Value)
 
+##----insert the gini index in the dataset
+unique(total$country)
+match_country <- data.frame(
+  num = c(36,40,100,152,158,191,203,208,246,250,276,352,376,380,392,440,554,578,608,643,705,710,
+          740,752,756,764,826,840,862),  
+  country = c("Australia", "Austria", "Bulgaria", "Chile", "Taiwan", "Croatia", "Czech Republic", "Denmark",
+              "Finland", "France", "Germany", "Iceland", "Israel", "Italy", "Japan", "Lithuania", "New Zealand",
+              "Norway", "Philippines", "Russia", "Slovenia", "South Africa", "Suriname", "Sweden", "Switzerland",
+              "Thailand", "Great Britain", "United States", "Venezuela") 
+)
+length(match_country$num)
+length(unique(total$country))
+
+# Trova gli indici dei numeri delle nazioni nella tabella di corrispondenza
+indici <- match(total$country, match_country$num)
+total$country <- match_country$country[indici]
+#match gini-nation
+gini <- c(gini2018$Value)
+
+ gini2018 <-gini2018%>%
+   mutate(LOCATION=mapvalues(LOCATION, from=c("AUT", "CZE", "DNK", "FIN", "FRA",
+                                              "DEU", "ITA", "SWE", "SVN", "LTU", "BGR"),
+                        to=c("Austria", "Czech Republic", "Denmark", "Finland",
+                             "France", "Germany", "Italy", "Sweden", "Slovenia", 
+                             "Lithuania", "Bulgaria")))
+ 
+ 
+total1 <- merge(total, gini2018, by.x = "country", by.y = "LOCATION")
+
+
+
 ##----subset data for total analysis----
 
 total <- data.frame(att_eco, data_fa1, country_e_v50)
 
-rm(list = "df","data","country_e_v50", "rel_test", "data_fa", "fa", "variabili_fattori", "att_eco", "loadings",
-   "fa1", "data_fa1")
+rm(list = "df","data","country_e_v50", "rel_test", "data_fa", "fa", "variabili_fattori1", "att_eco", "loadings",
+   "fa1", "data_fa1", "gini", "p")
 
 #FINE----
 
 ##------------test---------------------
-
+#t test between attitude towards eco_ineq e dummy of v21
 t.test(total$att_eco[total$v21d==0], total$att_eco[total$v21d==1])
 
 boxplot(total$att_eco[total$v21==1], total$att_eco[total$v21==2], total$att_eco[total$v21==3],
@@ -273,9 +306,7 @@ ggplot(data = total, aes(y=RC2, x=v21)) +
   ylim(0,15)
 
 
-
-
-  range(total$RC2)
+range(total$RC2)
 ## INTERACTIVE MODEL 
 # Y = a + b1x + b2z + b3(x*z) + u
 # 
@@ -299,8 +330,6 @@ x <- data$v50 #dummy x
 # comune; 
 
 #lm <- lm(att_eco ~ x + z + x*z)
-
-
 
 
 

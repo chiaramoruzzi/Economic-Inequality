@@ -7,19 +7,20 @@ library(psych)
 library(ggplot2)
 library(GPArotation)
 library(ggrepel)
+library(ltm)
+library(readr)
 
-rm(list = ls())
 
 ##---------import original dataset----
-setwd("/Users/trava/OneDrive/Desktop/")
-setwd("C:/Users/chiar/Desktop/Università/DAPS&CO/SOCIAL AND POLITICAL ATTITUDES/project/Economic-Inequality")
+#setwd("/Users/trava/OneDrive/Desktop/")
+#setwd("C:/Users/chiar/Desktop/Università/DAPS&CO/SOCIAL AND POLITICAL ATTITUDES/project/Economic-Inequality")
 
 data <-rio::import( "ZA7600_v3-0-0.dta")
 
 
 ##---------creazione dataframe per analisi fattoriale----
-data_fa <- data.frame(data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v28, data$v34)
-colnames(data_fa) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v28", "v34")
+#data_fa <- data.frame(data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v28, data$v34)
+#colnames(data_fa) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v28", "v34")
 data_fa <- data.frame(data$country, data$v21,data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v28, data$v34)
 colnames(data_fa) <- c("country", "v21", "v30", "v31", "v32", "v22", "v23", "v24", "v28", "v34")
 
@@ -60,35 +61,76 @@ data_fa <- data_fa %>%
   mutate(v21=mapvalues(v21, from=c(-9,-8,1,2,3,4,5),
                         to=c(NA,3,5,4,3,2,1)))
   
-  
-  
-
-#mutate(v21=mapvalues(v21, from=c(-9,-8,1,2,3,4,5),
-#to=c(NA,3,5,4,3,2,1)))%>%
 
 ##---------NA remove-----
 data_fa<-na.omit(data_fa)
 
 ##---------correlation matrix e grafico di correlazione----
-cor(data_fa, use = "complete.obs")
-corrplot(cor(data_fa, use = "complete.obs"),method = "number", type = c("lower"))
+#cor(data_fa, use = "complete.obs")
+#corrplot(cor(data_fa, use = "complete.obs"),method = "number", type = c("lower"))
 
-##---------analisi fattoriale----
-#1. controllare il numero di fattori sia con il metodo pca che paf
-fa.parallel(data_fa,fa = "pc")#2: utilizzeremo il metodo pca, poiché gli eigenvalue prodotti sono ottimali nel nostro caso
-#2. metodo di estrazione PAC
-fa <- principal(r=data_fa, nfactors = 2, rotate = "promax", missing = TRUE)
-print.psych(fa)
+###---------analisi fattoriale----
+##1. controllare il numero di fattori sia con il metodo pca che paf
+#fa.parallel(data_fa,fa = "pc")#2: utilizzeremo il metodo pca, poiché gli eigenvalue prodotti sono ottimali nel nostro caso
+##2. metodo di estrazione PAC
+#fa <- principal(r=data_fa, nfactors = 2, rotate = "promax", missing = TRUE)
+#print.psych(fa)
+#
+#
+###---------grafici----
+##1 diagramma
+#fa.diagram(fa, cut = 0.4, digits = 2)
+#
+##2 piano cartesiano
+## Estrai carichi dei fattori
+#loadings <- fa$loadings
+##Creazione del data frame per il grafico
+#df <- data.frame(
+#  Factor1 = loadings[, 1],
+#  Factor2 = loadings[, 2],
+#  Variable = rownames(loadings))
+## Creazione del grafico della factor analysis
+#ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
+#  geom_point() +
+#  geom_label_repel(hjust = 0.5, position = "identity", box.padding = 0.16, label.size = 0.1) +
+#  geom_vline(xintercept = 0, lty=2) +
+#  geom_hline(yintercept = 0, lty=2) +
+#  xlab("Factor 1") +
+#  ylab("Factor 2") +
+#  ggtitle("Factor Analysis Plot with promax rotation") +
+#  theme_minimal()
+##è utile per vedere la vicinanza dei punti delle variabili rispetto agli assi dei fattori
+##inoltre, se la plotti prima e dopo aver impostato rotate, si vede che i punti si spostano dal punto originale!
+#
+#
+###---------creazione delle variabili----
+#variabili_fattori <- as.matrix(data_fa) %*% loadings
+##Visualizza le variabili dei fattori
+#head(variabili_fattori, 10)
+##aggiungere le nuove variabili al dataset
+#data_fa <- cbind(data_fa, variabili_fattori)
 
 
-##---------grafici----
-#1 diagramma
-fa.diagram(fa, cut = 0.4, digits = 2)
+##----------subset del dataframe eliminando variabili superflue----
+#data_fa1 <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
+#colnames(data_fa1) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
+##----------subset 2
+country_e_v50 <- subset(data_fa[,c(1,2,11)])
+data_fa1 <- subset(data_fa[,c(3:8,10)])
+
+#factor analysis
+fa.parallel(data_fa1, fa="pc")
+
+fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "varimax")
+print.psych(fa1, cut = 0.4)
+###---------grafici----
+##1 diagramma
+fa.diagram(fa1, cut = 0.4)
 
 #2 piano cartesiano
-# Estrai carichi dei fattori
-loadings <- fa$loadings
-#Creazione del data frame per il grafico
+## Estrai carichi dei fattori
+loadings <- fa1$loadings
+##Creazione del data frame per il grafico
 df <- data.frame(
   Factor1 = loadings[, 1],
   Factor2 = loadings[, 2],
@@ -103,40 +145,17 @@ ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
   ylab("Factor 2") +
   ggtitle("Factor Analysis Plot with promax rotation") +
   theme_minimal()
-#è utile per vedere la vicinanza dei punti delle variabili rispetto agli assi dei fattori
-#inoltre, se la plotti prima e dopo aver impostato rotate, si vede che i punti si spostano dal punto originale!
+##è utile per vedere la vicinanza dei punti delle variabili rispetto agli assi dei fattori
+##inoltre, se la plotti prima e dopo aver impostato rotate, si vede che i punti si spostano dal punto originale!
 
 
-##---------creazione delle variabili----
-variabili_fattori <- as.matrix(data_fa) %*% loadings
+# Creazione variabili fattori
+variabili_fattori1 <- as.matrix(data_fa1) %*% loadings
 #Visualizza le variabili dei fattori
 head(variabili_fattori, 10)
 #aggiungere le nuove variabili al dataset
-data_fa <- cbind(data_fa, variabili_fattori)
+data_fa1 <- cbind(data_fa1, variabili_fattori)
 
-
-##----------subset del dataframe eliminando variabili superflue----
-#data_fa1 <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
-#colnames(data_fa1) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
-##----------subset 2
-country_e_v50 <- subset(data_fa[,c(1,2,11)])
-data_fa1 <- subset(data_fa[,c(3:8,10)])
-
-#factor analysis
-fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "varimax")
-print.psych(fa1, cut = 0.4)
-#diagramma
-fa.diagram(fa1, digits = 2)
-
-# Estrai carichi dei fattori
-loadings1 <- fa1$loadings
-variabili_fattori1 <- as.matrix(data_fa1) %*% loadings1
-#Visualizza le variabili dei fattori
-head(variabili_fattori1, 10)
-#aggiungere le nuove variabili al dataset
-data_fa1 <- cbind(data_fa1, variabili_fattori1)
-
-print(fa1)
 
 ##---------metodo alternativo per la creazione delle variabili fattori-----
 
@@ -201,10 +220,6 @@ print.psych(om, cut=0.3)
 # metodo alternativo grazie chatgpt
 
 #alpha_fattori <- alpha(data_fa1[, fa1$loadings[,2] != 0])
-
-
-install.packages("ltm")
-library(ltm)
 cronbach.alpha(rel_test)
 
 
@@ -214,7 +229,6 @@ cronbach.alpha(rel_test)
 ##-----RELATION TEST--------------
 # import Gini index data
 
-library(readr)
 gini <- read_csv("Gini index 2018 2019.csv")
 View(gini)
 ##-----subset gini index data---------------
@@ -232,6 +246,8 @@ hist(gini2018$Value)
 
 total <- data.frame(att_eco, data_fa1, country_e_v50)
 
+rm(list = "df","data","country_e_v50", "rel_test", "data_fa", "fa", "variabili_fattori", "att_eco", "loadings",
+   "fa1", "data_fa1")
 
 #FINE----
 

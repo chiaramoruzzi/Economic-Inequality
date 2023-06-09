@@ -144,17 +144,17 @@ plot(density(data_fa1$RC1, na.rm = T))
 plot(density(data_fa1$RC2, na.rm = T))
 
 # indici creati manualmente senza pesi
-plot(density(F1, na.rm = T))
-plot(density(F2, na.rm = T))
+#plot(density(F1, na.rm = T))
+#plot(density(F2, na.rm = T))
 
 # indici creati manualmente pesati
-plot(density(rc1, na.rm = T))
-plot(density(rc2, na.rm = T))
+#plot(density(rc1, na.rm = T))
+#plot(density(rc2, na.rm = T))
 
 #--------confronto tra indici-----
 
-ind <- data.frame(data_fa1$RC1,F1,rc1,data_fa1$RC2,F2,rc2)
-head(ind)
+#ind <- data.frame(data_fa1$RC1,F1,rc1,data_fa1$RC2,F2,rc2)
+#head(ind)
 
 ##-------variabile finale---------
 
@@ -184,7 +184,7 @@ colnames(rel_test) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
 om <- omega(m = rel_test, nfactors = 2) # SENZA FATTORI
 print.psych(om, cut=0.3)
 
-# metodo alternativo grz chatgpt
+# metodo alternativo grazie chatgpt
 
 alpha_fattori <- alpha(data_fa1[, fa1$loadings[,2] != 0])
 
@@ -208,11 +208,29 @@ View(gini)
 
 
 ## INTERACTIVE MODEL 
-Y = a + b1x + b2z + b3(x*z) + u
+# Y = a + b1x + b2z + b3(x*z) + u
+# 
+# x è dicotomica: ineguaglianza percepita sì/no v 50
+# z è continua: indice di gini
+# y è continua
 
-x è dicotomica: ineguaglianza percepita sì/no
-z è continua: indice di gini
-y è continua
+descr::freq(data$v50)
+
+#make x dichotomous
+data <- data %>%
+  mutate(v50=mapvalues(v50, from=c(-9,-8,1,2,3,4),
+                       to=c(NA,0,0,0,1,1)))
+
+
+# v50: do you believe there are economic inequalities in your country?
+descr::freq(data$v50) # 0 = no ; 1 = yes
+x <- data$v50 #dummy x
+
+# per inserire valori di zeta bisogna fare merge con usando country come variabile
+# comune; 
+
+#lm <- lm(att_eco ~ x + z + x*z)
+
 
 
 

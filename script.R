@@ -8,6 +8,8 @@ library(ggplot2)
 library(GPArotation)
 library(ggrepel)
 
+rm(list = ls())
+
 ##---------import original dataset----
 setwd("/Users/trava/OneDrive/Desktop/")
 setwd("C:/Users/chiar/Desktop/Università/DAPS&CO/SOCIAL AND POLITICAL ATTITUDES/project/Economic-Inequality")
@@ -18,13 +20,14 @@ data <-rio::import( "ZA7600_v3-0-0.dta")
 ##---------creazione dataframe per analisi fattoriale----
 data_fa <- data.frame(data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v28, data$v34)
 colnames(data_fa) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v28", "v34")
-
+data_fa <- data.frame(data$country, data$v21,data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v28, data$v34)
+colnames(data_fa) <- c("country", "v21", "v30", "v31", "v32", "v22", "v23", "v24", "v28", "v34")
 
 ##---------vedere distribuzione di frequenze----
 #fattore 1
 descr::freq(data_fa$v30)
 descr::freq(data_fa$v31)
-descr::freq(data_fa$v21)
+descr::freq(data$v50)
 descr::freq(data_fa$v32)
 #fattore 2
 descr::freq(data_fa$v22)
@@ -51,7 +54,15 @@ data_fa <- data_fa %>%
   mutate(v28=mapvalues(v28, from=c(-9,-8,1,2,3,4,5),
                        to=c(NA,3,5,4,3,2,1)))%>%
   mutate(v34=mapvalues(v34, from=c(-9,-8,1,2,3,4,5),
-                       to=c(NA,3,5,4,3,2,1)))
+                       to=c(NA,3,5,4,3,2,1)))%>%
+  mutate(v21d=mapvalues(v21, from=c(-9,-8,1,2,3,4,5),
+                        to=c(NA,0,1,1,0,0,0)))%>%
+  mutate(v21=mapvalues(v21, from=c(-9,-8,1,2,3,4,5),
+                        to=c(NA,3,5,4,3,2,1)))
+  
+  
+  
+
 #mutate(v21=mapvalues(v21, from=c(-9,-8,1,2,3,4,5),
 #to=c(NA,3,5,4,3,2,1)))%>%
 
@@ -105,8 +116,11 @@ data_fa <- cbind(data_fa, variabili_fattori)
 
 
 ##----------subset del dataframe eliminando variabili superflue----
-data_fa1 <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
-colnames(data_fa1) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
+#data_fa1 <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
+#colnames(data_fa1) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
+##----------subset 2
+country_e_v50 <- subset(data_fa[,c(1,2,11)])
+data_fa1 <- subset(data_fa[,c(3:8,10)])
 
 #factor analysis
 fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "varimax")
@@ -186,7 +200,7 @@ print.psych(om, cut=0.3)
 
 # metodo alternativo grazie chatgpt
 
-alpha_fattori <- alpha(data_fa1[, fa1$loadings[,2] != 0])
+#alpha_fattori <- alpha(data_fa1[, fa1$loadings[,2] != 0])
 
 
 install.packages("ltm")
@@ -203,10 +217,47 @@ cronbach.alpha(rel_test)
 library(readr)
 gini <- read_csv("Gini index 2018 2019.csv")
 View(gini)
+##-----subset gini index data---------------
+
+gini2018 <- subset(gini, TIME == 2018)
+
+gini2018 <- subset(gini2018[c(1, 3:7, 11, 18, 20, 22, 23),])
+gini2018 <- subset(gini2018[,c(1,6,7)])
+
+head(gini2018,11)
+
+hist(gini2018$Value)
+
+##----subset data for total analysis----
+
+total <- data.frame(att_eco, data_fa1, country_e_v50)
+
 
 #FINE----
 
+t.test(total$att_eco[total$v21d==0], total$att_eco[total$v21d==1])
 
+boxplot(total$att_eco[total$v21==1], total$att_eco[total$v21==2], total$att_eco[total$v21==3],
+        total$att_eco[total$v21==4], total$att_eco[total$v21==5])
+mean(total$att_eco[total$v21d==1])
+
+lm1 <- lm(total$att_eco ~ total$v21)
+stargazer::stargazer(lm1, type = "text")
+
+ggplot(data = total, aes(y=RC1, x=v21)) +
+  geom_smooth(method = "lm",
+              formula = y~x)+ 
+  ylim(0,14)
+
+ggplot(data = total, aes(y=RC2, x=v21)) +
+  geom_smooth(method = "lm",
+              formula = y~x)+ 
+  ylim(0,15)
+
+
+
+
+  range(total$RC2)
 ## INTERACTIVE MODEL 
 # Y = a + b1x + b2z + b3(x*z) + u
 # 
@@ -217,10 +268,10 @@ View(gini)
 descr::freq(data$v50)
 
 #make x dichotomous
-data <- data %>%
-  mutate(v50=mapvalues(v50, from=c(-9,-8,1,2,3,4),
+data %>%
+mutate(v50d=mapvalues(v50, from=c(-9,-8,1,2,3,4),
                        to=c(NA,0,0,0,1,1)))
-
+hist(total$v50)
 
 # v50: do you believe there are economic inequalities in your country?
 descr::freq(data$v50) # 0 = no ; 1 = yes

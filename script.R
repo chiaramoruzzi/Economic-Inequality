@@ -279,12 +279,13 @@ total1 <- merge(total, gini2018, by.x = "country", by.y = "LOCATION")
 
 total <- data.frame(att_eco, data_fa1, country_e_v50)
 
-rm(list = "df","data","country_e_v50", "rel_test", "data_fa", "fa", "variabili_fattori1", "att_eco", "loadings",
-   "fa1", "data_fa1", "gini", "p")
+rm(list = ls())
 
 #FINE----
-
+write.csv(total1, "C:\\Users\\trava\\OneDrive\\Desktop\\università\\Daps&co\\8-Social and political attitude\\Economic-Inequality\\total1.csv", row.names=FALSE)
 ##------------test---------------------
+
+total1 <- rio::import("total1.csv")
 #t test between attitude towards eco_ineq e dummy of v21
 t.test(total$att_eco[total$v21d==0], total$att_eco[total$v21d==1])
 

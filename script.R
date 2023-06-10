@@ -22,10 +22,10 @@ data <-rio::import( "ZA7600_v3-0-0.dta")
 
 
 ##---------creazione dataframe per analisi fattoriale----
-#data_fa <- data.frame(data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v28, data$v34)
-#colnames(data_fa) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v28", "v34")
-data_fa <- data.frame(data$country, data$v21,data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v28, data$v34)
-colnames(data_fa) <- c("country", "v21", "v30", "v31", "v32", "v22", "v23", "v24", "v28", "v34")
+#data_fa <- data.frame(data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v34)
+#colnames(data_fa) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
+data_fa <- data.frame(data$country, data$v21,data$v30, data$v31, data$v22, data$v23, data$v24, data$v34)
+colnames(data_fa) <- c("country", "v21", "v30", "v31", "v22", "v23", "v24", "v34")
 
 ##---------vedere distribuzione di frequenze----
 #fattore 1
@@ -47,15 +47,11 @@ data_fa <- data_fa %>%
                        to=c(NA,3,1,2,3,4,5)))%>%
   mutate(v31=mapvalues(v31, from=c(-9,-8,1,2,3,4,5),
                        to=c(NA,3,1,2,3,4,5)))%>%
-  mutate(v32=mapvalues(v32, from=c(-9,-8,0,1,2,3,4,5,6,7,8,9,10),
-                       to=c(NA,NA,1,1,2,2,3,3,3,4,4,5,5)))%>%
   mutate(v22=mapvalues(v22, from=c(-9,-8,1,2,3,4,5),
                        to=c(NA,3,5,4,3,2,1)))%>%
   mutate(v23=mapvalues(v23, from=c(-9,-8,1,2,3,4,5),
                        to=c(NA,3,5,4,3,2,1)))%>%
   mutate(v24=mapvalues(v24, from=c(-9,-8,1,2,3,4,5),
-                       to=c(NA,3,5,4,3,2,1)))%>%
-  mutate(v28=mapvalues(v28, from=c(-9,-8,1,2,3,4,5),
                        to=c(NA,3,5,4,3,2,1)))%>%
   mutate(v34=mapvalues(v34, from=c(-9,-8,1,2,3,4,5),
                        to=c(NA,3,5,4,3,2,1)))%>%
@@ -76,8 +72,8 @@ data_fa<-na.omit(data_fa)
 ##1. controllare il numero di fattori sia con il metodo pca che paf
 #fa.parallel(data_fa,fa = "pc")#2: utilizzeremo il metodo pca, poiché gli eigenvalue prodotti sono ottimali nel nostro caso
 ##2. metodo di estrazione PAC
-#fa <- principal(r=data_fa, nfactors = 2, rotate = "promax", missing = TRUE)
-#print.psych(fa)
+fa <- principal(r=data_fa, nfactors = 2, rotate="varimax", missing = TRUE)
+print.psych(fa, cut = 0.4)
 #
 #
 ###---------grafici----
@@ -87,12 +83,12 @@ data_fa<-na.omit(data_fa)
 ##2 piano cartesiano
 ## Estrai carichi dei fattori
 #loadings <- fa$loadings
-##Creazione del data frame per il grafico
+###Creazione del data frame per il grafico
 #df <- data.frame(
 #  Factor1 = loadings[, 1],
 #  Factor2 = loadings[, 2],
 #  Variable = rownames(loadings))
-## Creazione del grafico della factor analysis
+### Creazione del grafico della factor analysis
 #ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
 #  geom_point() +
 #  geom_label_repel(hjust = 0.5, position = "identity", box.padding = 0.16, label.size = 0.1) +
@@ -100,7 +96,7 @@ data_fa<-na.omit(data_fa)
 #  geom_hline(yintercept = 0, lty=2) +
 #  xlab("Factor 1") +
 #  ylab("Factor 2") +
-#  ggtitle("Factor Analysis Plot with promax rotation") +
+#  ggtitle("Factor Analysis Plot") +
 #  theme_minimal()
 ##è utile per vedere la vicinanza dei punti delle variabili rispetto agli assi dei fattori
 ##inoltre, se la plotti prima e dopo aver impostato rotate, si vede che i punti si spostano dal punto originale!
@@ -118,13 +114,13 @@ data_fa<-na.omit(data_fa)
 #data_fa1 <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
 #colnames(data_fa1) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
 ##----------subset 2
-country_e_v50 <- subset(data_fa[,c(1,2,11)])
-data_fa1 <- subset(data_fa[,c(3:8,10)])
+country_e_v21 <- subset(data_fa[,c(1,2,9)])
+data_fa1 <- subset(data_fa[,c(3:8)])
 
 #factor analysis
 fa.parallel(data_fa1, fa="pc")
 
-fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "varimax")
+fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "promax")
 print.psych(fa1, cut = 0.4)
 ###---------grafici----
 ##1 diagramma
@@ -135,8 +131,8 @@ fa.diagram(fa1, cut = 0.4)
 loadings <- fa1$loadings
 ##Creazione del data frame per il grafico
 df <- data.frame(
-  Factor1 = loadings[, 1],
-  Factor2 = loadings[, 2],
+  Factor1 = loadings[, 2],
+  Factor2 = loadings[, 1],
   Variable = rownames(loadings))
 # Creazione del grafico della factor analysis
 ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
@@ -146,16 +142,17 @@ ggplot(df, aes(x = Factor1, y = Factor2, label = Variable)) +
   geom_hline(yintercept = 0, lty=2) +
   xlab("Factor 1") +
   ylab("Factor 2") +
-  ggtitle("Factor Analysis Plot with promax rotation") +
+  ggtitle("Factor Analysis Plot with Promax rotation") +
   theme_minimal()
 ##è utile per vedere la vicinanza dei punti delle variabili rispetto agli assi dei fattori
 ##inoltre, se la plotti prima e dopo aver impostato rotate, si vede che i punti si spostano dal punto originale!
 
+print(fa1$loadings)
 
 # Creazione variabili fattori
-variabili_fattori1 <- as.matrix(data_fa1) %*% loadings
+#variabili_fattori1 <- as.matrix(data_fa1) %*% loadings
 #Visualizza le variabili dei fattori
-head(variabili_fattori1, 10)
+#head(variabili_fattori1, 10)
 #aggiungere le nuove variabili al dataset
 data_fa1 <- cbind(data_fa1, variabili_fattori1)
 
@@ -167,8 +164,13 @@ data_fa1 <- cbind(data_fa1, variabili_fattori1)
 # rc1 <- (data_fa1$v23 + data_fa1$v22 + data_fa1$v34 + data_fa1$v24)
 
 # indici pesati per factor loadings - controllo incrociato
-# F2 <- ((0.91*data_fa1$v30) + (0.91*data_fa1$v31) + (0.51*data_fa1$v32))
-# F1 <- ((0.74*data_fa1$v23) + (0.68*data_fa1$v22) + (0.64*data_fa1$v34) + (0.61*data_fa1$v24))
+F1 <- ((0.93*data_fa1$v30) + (0.93*data_fa1$v31))
+F2 <- ((0.76*data_fa1$v23) + (0.69*data_fa1$v22) + (0.65*data_fa1$v34) + (0.62*data_fa1$v24))
+print(fa1)
+
+data_fa1 <- cbind(data_fa1, F1, F2)
+
+data_fa1$att_eco <- (data_fa1$F1 + data_fa1$F2)
 
 ## indice composito: attitude towards economic inequality
 # range 1-5= 1-> sfavore ridurre disuguaglianze
@@ -194,11 +196,13 @@ plot(density(data_fa1$RC2, na.rm = T))
 
 ##-------variabile finale---------
 
-att_eco <- (data_fa1$RC1 + data_fa1$RC2)/7
+att_eco <- (data_fa1$RC1 + data_fa1$RC2)/6
+
+range(data_fa1$RC2)
 
 p <- ggplot(data=NULL, aes(x=att_eco))+
   geom_density()+
-  xlim(0,30)+
+  xlim(0,4)+
   xlab("Attitude towards economic inequality")+
   ylab("Density")+
   ggtitle("Distribution of the dependent variable")+
@@ -206,15 +210,15 @@ p <- ggplot(data=NULL, aes(x=att_eco))+
 
 p + theme(plot.title = element_text(hjust = 0.5))
 hist(att_eco)
-range(att_eco)
+range(data_fa1$att_eco)
 
 ##-----RELIABILITY TEST-----------
 
 #omega(m = data_fa1) # CON FATTORI
 
 
-rel_test <- data.frame(data_fa$v30, data_fa$v31, data_fa$v32, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
-colnames(rel_test) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
+rel_test <- data.frame(data_fa$v30, data_fa$v31, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
+colnames(rel_test) <- c("v30", "v31", "v22", "v23", "v24", "v34")
 
 #om <- omega(m = rel_test, nfactors = 2) # SENZA FATTORI
 #print.psych(om, cut=0.3)
@@ -234,7 +238,7 @@ cronbach.alpha(rel_test)
 gini <- read_csv("Gini index 2018 2019.csv")
 View(gini)
 ##-----subset gini index data---------------
-total <- data.frame(att_eco, data_fa1, country_e_v50)
+total <- data.frame(att_eco, data_fa1, country_e_v21)
 
 gini2018 <- subset(gini, TIME == 2018)
 
@@ -274,8 +278,10 @@ gini <- c(gini2018$Value)
  
 total1 <- merge(total, gini2018, by.x = "country", by.y = "LOCATION")
 
-
-
+total1 <- subset(total1[,(1,3:15)])
+total1 <-total1 %>%
+  rename(att_eco=att_eco.1)%>%
+  rename(gini_index=Value)
 ##----subset data for total analysis----
 
 total <- data.frame(att_eco, data_fa1, country_e_v50)
@@ -320,16 +326,21 @@ range(total$RC2)
 
 # Y = a + b1x + b2z + u
 
+
 freq(total1$v21d)
 freq(total1$v21)
 
 freq(total1$Value)
 
+y <- total1$att_eco
 x <- total1$v21d
 z <- total1$Value
 
-lm <- lm(total1$att_eco ~ x + z + x*z)
-stargazer(lm, type = "text")
+lm1 <- lm(y ~ x)
+lm2 <- lm(y ~ z)
+lm3 <- lm(y ~ x+z)
+lm_int <- lm(y ~ x*z)
+stargazer(lm1,lm2,lm_int, type = "text")
 
 
 
@@ -371,21 +382,8 @@ plot(plot_data,
 
 
 
-#make x dichotomous
-data %>%
-mutate(v50d=mapvalues(v50, from=c(-9,-8,1,2,3,4),
-                       to=c(NA,0,0,0,1,1)))
-hist(total$v50)
-
-# v50: do you believe there are economic inequalities in your country?
-descr::freq(data$v50) # 0 = no ; 1 = yes
-x <- data$v50 #dummy x
-
-# per inserire valori di zeta bisogna fare merge con usando country come variabile
-# comune; 
-
-#lm <- lm(att_eco ~ x + z + x*z)
-
+lm1 <- lm(x~Value, data = att_gini)
+stargazer::stargazer(lm1, type ="text")
 
 
 

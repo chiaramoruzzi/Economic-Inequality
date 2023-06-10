@@ -10,7 +10,8 @@ library(ggrepel)
 library(ltm)
 library(readr)
 library(ggeffects)
-
+library(descr)
+library(stargazer)
 
 
 ##---------import original dataset----
@@ -285,7 +286,13 @@ rm(list = ls())
 write.csv(total1, "C:\\Users\\trava\\OneDrive\\Desktop\\università\\Daps&co\\8-Social and political attitude\\Economic-Inequality\\total1.csv", row.names=FALSE)
 ##------------test---------------------
 
+setwd("C:/Users/chiar/Desktop/Università/DAPS&CO/SOCIAL AND POLITICAL ATTITUDES/project/Economic-Inequality")
+
 total1 <- rio::import("total1.csv")
+
+total1$att_eco <- total1$att_eco/7
+plot(density(total1$att_eco))
+
 #t test between attitude towards eco_ineq e dummy of v21
 t.test(total$att_eco[total$v21d==0], total$att_eco[total$v21d==1])
 
@@ -308,6 +315,55 @@ ggplot(data = total, aes(y=RC2, x=v21)) +
 
 
 range(total$RC2)
+
+## MULTIVARIATE MODEL
+
+# Y = a + b1x + b2z + u
+
+freq(total1$v21d)
+freq(total1$v21)
+
+freq(total1$Value)
+
+x <- total1$v21d
+z <- total1$Value
+
+lm <- lm(total1$att_eco ~ x + z + x*z)
+stargazer(lm, type = "text")
+
+
+
+# adj R^2 = 0.204
+
+ggplot(data = total1, aes(x=Value,y=att_eco))+
+  geom_smooth(aes(color = factor(v21d)), method = "lm", se = F)+
+  ylim (0,5)+
+  theme_minimal()
+
+ggplot(data = total1, aes(x=v21d,y=att_eco))+
+  geom_smooth(aes(color = factor(Value)), method = "lm", se = F)+
+  ylim (0,5)+
+  theme_minimal()
+
+plot_data <- ggpredict(lm, terms = c("x", "z"))
+plot(plot_data, 
+     add.data = TRUE,
+     ci.style = "ribbon", 
+     dot.size = 1.5,
+     use.theme = TRUE,
+     xlim = c(0,1),
+     ylim = c(0,5))
+
+
+plot_data <- ggpredict(lm, terms = c("z", "x"))
+plot(plot_data, 
+     add.data = TRUE,
+     ci.style = "ribbon", 
+     dot.size = 1.5,
+     use.theme = TRUE,)
+plot.window
+
+
 ## INTERACTIVE MODEL 
 # Y = a + b1x + b2z + b3(x*z) + u
 # 
@@ -315,7 +371,7 @@ range(total$RC2)
 # z è continua: indice di gini
 # y è continua
 
-descr::freq(data$v50)
+
 
 #make x dichotomous
 data %>%

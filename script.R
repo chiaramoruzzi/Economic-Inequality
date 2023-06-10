@@ -350,9 +350,7 @@ plot(plot_data,
      add.data = TRUE,
      ci.style = "ribbon", 
      dot.size = 1.5,
-     use.theme = TRUE,
-     xlim = c(0,1),
-     ylim = c(0,5))
+     use.theme = TRUE)
 
 
 plot_data <- ggpredict(lm, terms = c("z", "x"))
@@ -361,7 +359,7 @@ plot(plot_data,
      ci.style = "ribbon", 
      dot.size = 1.5,
      use.theme = TRUE,)
-plot.window
+
 
 
 ## INTERACTIVE MODEL 

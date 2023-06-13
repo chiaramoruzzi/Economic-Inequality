@@ -103,11 +103,11 @@ print.psych(fa, cut = 0.4)
 #
 #
 ###---------creazione delle variabili----
-#variabili_fattori <- as.matrix(data_fa) %*% loadings
-##Visualizza le variabili dei fattori
-#head(variabili_fattori, 10)
+variabili_fattori <- as.matrix(data_fa1) %*% loadings
+#Visualizza le variabili dei fattori
+head(variabili_fattori, 10)
 ##aggiungere le nuove variabili al dataset
-#data_fa <- cbind(data_fa, variabili_fattori)
+data_fa1 <- cbind(data_fa1, variabili_fattori)
 
 
 ##----------subset del dataframe eliminando variabili superflue----
@@ -170,7 +170,7 @@ print(fa1)
 
 data_fa1 <- cbind(data_fa1, F1, F2)
 
-data_fa1$att_eco <- (data_fa1$F1 + data_fa1$F2)
+data_fa1$att_eco <- (data_fa1$RC1 + data_fa1$RC2)
 
 ## indice composito: attitude towards economic inequality
 # range 1-5= 1-> sfavore ridurre disuguaglianze
@@ -200,9 +200,9 @@ att_eco <- (data_fa1$RC1 + data_fa1$RC2)/6
 
 range(data_fa1$RC2)
 
-p <- ggplot(data=NULL, aes(x=att_eco))+
-  geom_density()+
-  xlim(0,4)+
+p <- ggplot(data=data_fa1, aes(x=att_eco))+
+  geom_histogram()+
+  xlim(0,25)+
   xlab("Attitude towards economic inequality")+
   ylab("Density")+
   ggtitle("Distribution of the dependent variable")+
@@ -238,7 +238,7 @@ cronbach.alpha(rel_test)
 gini <- read_csv("Gini index 2018 2019.csv")
 View(gini)
 ##-----subset gini index data---------------
-total <- data.frame(att_eco, data_fa1, country_e_v21)
+total <- data.frame(data_fa1, country_e_v21)
 
 gini2018 <- subset(gini, TIME == 2018)
 
@@ -280,7 +280,6 @@ total1 <- merge(total, gini2018, by.x = "country", by.y = "LOCATION")
 
 total1 <- subset(total1[,(1,3:15)])
 total1 <-total1 %>%
-  rename(att_eco=att_eco.1)%>%
   rename(gini_index=Value)
 ##----subset data for total analysis----
 
@@ -334,33 +333,44 @@ freq(total1$Value)
 
 y <- total1$att_eco
 x <- total1$v21d
-z <- total1$Value
+z <- total1$gini_index
 
-lm1 <- lm(y ~ x)
-lm2 <- lm(y ~ z)
-lm3 <- lm(y ~ x+z)
-lm_int <- lm(y ~ x*z)
-stargazer(lm1,lm2,lm_int, type = "text")
+lm1 <- rlm(y ~ x)
+lm2 <- rlm(y ~ z)
+lm3 <- rlm(y ~ x+z)
+lm_int <- rlm(y ~ x*z)
+stargazer::stargazer(dep.var.caption = "Attitude towards economic inequality", column.labels = c("Model 1", "Model 2", "Interactive model"),
+                      lm1,lm2,lm_int, type = "text", notes = "robust standard errors in parentheses", out = "filename.html")
 
+summary(lm_int)
 
-
+sd(data_fa1$RC1)
+sd(data_fa1$RC2)
 # adj R^2 = 0.204
 
-ggplot(data = total1, aes(x=Value,y=att_eco))+
+ggplot(data = total1, mapping = aes(x=v21d))+
+  geom_bar()+
+  xlab("Inequality perception (No/Yes)")+
+  ylab("Count")+
+  theme_minimal()
+
+sd(data_fa1$att_eco)
+
+
+ggplot(data = total1, aes(x=gini_index,y=att_eco))+
   geom_smooth(aes(color = factor(v21d)), method = "lm", se = F)+
-  ylim (0,5)+
+  ylim (0,23)+
   theme_minimal()
 
 ggplot(data = total1, aes(x=v21d,y=att_eco))+
-  geom_smooth(aes(color = factor(Value)), method = "lm", se = F)+
-  ylim (0,5)+
+  geom_smooth(aes(color = factor(v21d)), method = "lm", se = F)+
   theme_minimal()
 
-plot_data <- ggpredict(lm, terms = c("x", "z"))
+plot_data <- ggpredict(lm_int, terms = c("x"))
 plot(plot_data, 
      add.data = TRUE,
-     ci.style = "ribbon", 
-     dot.size = 1.5,
+     ci.style = "ribbon",  
+     dot
      use.theme = TRUE)
 
 
@@ -373,17 +383,7 @@ plot(plot_data,
 
 
 
-## INTERACTIVE MODEL 
-# Y = a + b1x + b2z + b3(x*z) + u
-# 
-# x è dicotomica: ineguaglianza percepita sì/no v 50
-# z è continua: indice di gini
-# y è continua
 
-
-
-lm1 <- lm(x~Value, data = att_gini)
-stargazer::stargazer(lm1, type ="text")
 
 
 

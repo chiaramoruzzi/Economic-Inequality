@@ -40,6 +40,9 @@ descr::freq(data_fa$v24)
 descr::freq(data_fa$v28)
 descr::freq(data_fa$v34)
 
+#Australia	0.325	
+#gbr0.366	
+#usa 0.393
 
 ##---------ricodifica delle variabili----
 data_fa <- data_fa %>%
@@ -103,9 +106,9 @@ print.psych(fa, cut = 0.4)
 #
 #
 ###---------creazione delle variabili----
-variabili_fattori <- as.matrix(data_fa1) %*% loadings
+variabili_fattori1 <- as.matrix(data_fa1) %*% loadings
 #Visualizza le variabili dei fattori
-head(variabili_fattori, 10)
+head(variabili_fattori1, 10)
 ##aggiungere le nuove variabili al dataset
 data_fa1 <- cbind(data_fa1, variabili_fattori)
 
@@ -154,7 +157,7 @@ print(fa1$loadings)
 #Visualizza le variabili dei fattori
 #head(variabili_fattori1, 10)
 #aggiungere le nuove variabili al dataset
-data_fa1 <- cbind(data_fa1, variabili_fattori1)
+data_fa1 <- cbind(data_fa1, variabili_fattori)
 
 
 ##---------metodo alternativo per la creazione delle variabili fattori-----
@@ -246,7 +249,11 @@ gini2018 <- subset(gini2018[c(1, 3:7, 11, 18, 20, 22, 23),])
 gini2018 <- subset(gini2018[,c(1,6,7)])
 
 head(gini2018,11)
-
+gini2 <- data.frame(c("United States", "Australia","Great Britain"),
+                    c("2018", "2018", "2018"),
+                    c(0.393, 0.325, 0.366))
+colnames(gini2) <- c("LOCATION", "TIME", "Value")
+gini2018 <- rbind(gini2018, gini2)
 hist(gini2018$Value)
 
 ##----insert the gini index in the dataset
@@ -278,9 +285,13 @@ gini <- c(gini2018$Value)
  
 total1 <- merge(total, gini2018, by.x = "country", by.y = "LOCATION")
 
-total1 <- subset(total1[,(1,3:15)])
+total1 <- subset(total1[,(1:9,12,13,14,15)])
 total1 <-total1 %>%
   rename(gini_index=Value)
+
+total1$att_eco <- total1$RC1+total1$RC2
+
+lm <- lm(att_eco ~)
 ##----subset data for total analysis----
 
 total <- data.frame(att_eco, data_fa1, country_e_v50)
@@ -295,7 +306,7 @@ setwd("C:/Users/chiar/Desktop/Università/DAPS&CO/SOCIAL AND POLITICAL ATTITUDES
 
 total1 <- rio::import("total1.csv")
 
-total1$att_eco <- total1$att_eco/7
+#total1$att_eco <- total1$att_eco/7
 plot(density(total1$att_eco))
 
 #t test between attitude towards eco_ineq e dummy of v21
@@ -319,7 +330,7 @@ ggplot(data = total, aes(y=RC2, x=v21)) +
   ylim(0,15)
 
 
-range(total$RC2)
+range(total1$att_eco)
 
 ## MULTIVARIATE MODEL
 
@@ -332,17 +343,17 @@ freq(total1$v21)
 freq(total1$Value)
 
 y <- total1$att_eco
-x <- total1$v21d
-z <- total1$gini_index
+z <- total1$v21d
+x <- total1$gini_index
 
-lm1 <- rlm(y ~ x)
-lm2 <- rlm(y ~ z)
-lm3 <- rlm(y ~ x+z)
-lm_int <- rlm(y ~ x*z)
+lm1 <- lm(y ~ x)
+lm2 <- lm(y ~ z)
+lm3 <- lm(y ~ x+z)
+lm_int <- lm(y ~ x*z)
 stargazer::stargazer(dep.var.caption = "Attitude towards economic inequality", column.labels = c("Model 1", "Model 2", "Interactive model"),
                       lm1,lm2,lm_int, type = "text", notes = "robust standard errors in parentheses", out = "filename.html")
 
-summary(lm_int)
+stargazer(lm3, type = "text")
 
 sd(data_fa1$RC1)
 sd(data_fa1$RC2)
@@ -374,7 +385,7 @@ plot(plot_data,
      use.theme = TRUE)
 
 
-plot_data <- ggpredict(lm, terms = c("z", "x"))
+plot_data <- ggpredict(lm_int, terms = c("x", "z"))
 plot(plot_data, 
      add.data = TRUE,
      ci.style = "ribbon", 

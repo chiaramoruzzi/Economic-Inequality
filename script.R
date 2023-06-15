@@ -358,15 +358,15 @@ freq(total1$v21)
 freq(total1$Value)
 
 y <- total1$att_eco
-z <- total1$v21d
-x <- total1$gini_index
+perception <- total1$v21d
+effective <- total1$gini_index
 
-lm1 <- lm(y ~ x)
-lm2 <- lm(y ~ z)
-lm3 <- lm(y ~ x+z)
+lm1 <- lm(y ~ effective)
+lm2 <- lm(y ~ perception)
+lm3 <- lm(y ~ effective + perception)
 lm_int <- lm(y ~ x*z)
-stargazer::stargazer(dep.var.caption = "Attitude towards economic inequality", column.labels = c("Model 1", "Model 2", "Interactive model"),
-                      lm1,lm2,lm_int, type = "text", notes = "robust standard errors in parentheses", out = "filename.html")
+stargazer::stargazer(dep.var.caption = "Attitude towards economic inequality", column.labels = c("Model 1", "Model 2", "Model 3"),
+                      lm1,lm2,lm3, type = "text", notes = "robust standard errors in parentheses", out = "filename.html")
 
 stargazer(lm3, type = "text")
 
@@ -392,16 +392,17 @@ ggplot(data = total1, aes(x=v21d,y=att_eco))+
   geom_smooth(aes(color = factor(v21d)), method = "lm", se = F)+
   theme_minimal()
 
-plot_data <- ggpredict(lm_int, terms = c("x"))
+plot_data <- ggpredict(lm_int, terms = c("x","z"))
 plot(plot_data, 
      add.data = TRUE,
      ci.style = "ribbon",  
-     dot
+     dot.size = 0.5,
      use.theme = TRUE)
 
 
-plot_data <- ggpredict(lm_int, terms = c("x", "z"))
-plot(plot_data, 
+plot_data <- ggpredict(lm_int, terms = c("z"))
+plot(plot_data)
+, 
      add.data = TRUE,
      ci.style = "ribbon", 
      dot.size = 1.5,

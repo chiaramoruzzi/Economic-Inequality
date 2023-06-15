@@ -24,7 +24,7 @@ data <-rio::import( "ZA7600_v3-0-0.dta")
 ##---------creazione dataframe per analisi fattoriale----
 #data_fa <- data.frame(data$v30, data$v31, data$v32, data$v22, data$v23, data$v24, data$v34)
 #colnames(data_fa) <- c("v30", "v31", "v32", "v22", "v23", "v24", "v34")
-data_fa <- data.frame(data$country, data$v21,data$v30, data$v31, data$v22, data$v23, data$v24, data$v34)
+data_fa <- data.frame(data$country, data$v21, data$v30, data$v31, data$v22, data$v23, data$v24, data$v34)
 colnames(data_fa) <- c("country", "v21", "v30", "v31", "v22", "v23", "v24", "v34")
 
 ##---------vedere distribuzione di frequenze----
@@ -75,8 +75,8 @@ data_fa<-na.omit(data_fa)
 ##1. controllare il numero di fattori sia con il metodo pca che paf
 #fa.parallel(data_fa,fa = "pc")#2: utilizzeremo il metodo pca, poiché gli eigenvalue prodotti sono ottimali nel nostro caso
 ##2. metodo di estrazione PAC
-fa <- principal(r=data_fa, nfactors = 2, rotate="varimax", missing = TRUE)
-print.psych(fa, cut = 0.4)
+#fa <- principal(r=data_fa, nfactors = 2, rotate="varimax", missing = TRUE)
+#print.psych(fa, cut = 0.4)
 #
 #
 ###---------grafici----
@@ -106,11 +106,11 @@ print.psych(fa, cut = 0.4)
 #
 #
 ###---------creazione delle variabili----
-variabili_fattori1 <- as.matrix(data_fa1) %*% loadings
-#Visualizza le variabili dei fattori
-head(variabili_fattori1, 10)
-##aggiungere le nuove variabili al dataset
-data_fa1 <- cbind(data_fa1, variabili_fattori)
+#variabili_fattori1 <- as.matrix(data_fa1) %*% loadings
+##Visualizza le variabili dei fattori
+#head(variabili_fattori1, 10)
+###aggiungere le nuove variabili al dataset
+#data_fa1 <- cbind(data_fa1, variabili_fattori)
 
 
 ##----------subset del dataframe eliminando variabili superflue----
@@ -120,14 +120,28 @@ data_fa1 <- cbind(data_fa1, variabili_fattori)
 country_e_v21 <- subset(data_fa[,c(1,2,9)])
 data_fa1 <- subset(data_fa[,c(3:8)])
 
+ra1 <-cor(data_fa1, use = "complete.obs")
+corrplot(ra1, method = "shade")
 #factor analysis
 fa.parallel(data_fa1, fa="pc")
+fa.
 
-fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "promax")
+fa1 <- principal(r=data_fa1, nfactors = 2, rotate = "oblimin")
 print.psych(fa1, cut = 0.4)
+
+
+#residual
+corrplot(factor.residuals(ra1, fa1),method = "ellipse")
 ###---------grafici----
 ##1 diagramma
 fa.diagram(fa1, cut = 0.4)
+
+###---------creazione delle variabili----
+variabili_fattori1 <- as.matrix(data_fa1) %*% loadings
+##Visualizza le variabili dei fattori
+head(variabili_fattori1, 10)
+###aggiungere le nuove variabili al dataset
+data_fa1 <- cbind(data_fa1, variabili_fattori1)
 
 #2 piano cartesiano
 ## Estrai carichi dei fattori
@@ -219,8 +233,9 @@ range(data_fa1$att_eco)
 
 #omega(m = data_fa1) # CON FATTORI
 
-
 rel_test <- data.frame(data_fa$v30, data_fa$v31, data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
+rel_test1 <- data.frame(data_fa$v30, data_fa$v31)
+rel_test2 <- data.frame(data_fa$v22, data_fa$v23, data_fa$v24, data_fa$v34)
 colnames(rel_test) <- c("v30", "v31", "v22", "v23", "v24", "v34")
 
 #om <- omega(m = rel_test, nfactors = 2) # SENZA FATTORI
